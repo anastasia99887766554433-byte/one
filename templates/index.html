@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Daily Digest</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>🧠 AI Daily Digest</h1>
+        <p class="subtitle">10 главных AI-новостей за последние 24 часа + короткая сводка дня.</p>
+      </header>
+
+      <section class="summary" id="summary">Загрузка сводки…</section>
+
+      <section>
+        <h2>Главные новости</h2>
+        <ul id="news-list" class="news-list"></ul>
+      </section>
+    </main>
+
+    <script>
+      const summaryEl = document.getElementById('summary');
+      const listEl = document.getElementById('news-list');
+
+      function renderItem(item, index) {
+        const li = document.createElement('li');
+        li.className = 'news-item';
+
+        const date = new Date(item.published_at);
+        const when = Number.isNaN(date.getTime()) ? item.published_at : date.toLocaleString('ru-RU');
+
+        li.innerHTML = `
+          <span class="badge">#${index + 1}</span>
+          <div>
+            <a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.title}</a>
+            <p>${item.source} · ${when}</p>
+          </div>
+        `;
+
+        return li;
+      }
+
+      async function loadNews() {
+        try {
+          const res = await fetch('/api/news');
+          const data = await res.json();
+
+          if (!res.ok) throw new Error(data.error || 'Ошибка запроса');
+
+          summaryEl.textContent = data.summary;
+          listEl.innerHTML = '';
+
+          data.items.forEach((item, idx) => {
+            listEl.appendChild(renderItem(item, idx));
+          });
+        } catch (err) {
+          summaryEl.textContent = `Не удалось загрузить новости: ${err.message}`;
+        }
+      }
+
+      loadNews();
+    </script>
+  </body>
+</html>
